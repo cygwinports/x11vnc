@@ -1,5 +1,5 @@
 category: Net X11
-requires: cygwin crypt libvncserver0 libX11_6 libXdamage1 libXext6 libXfixes3 libXinerama1 libXrandr2 libXtst6 openssl tk
+requires: crypt libvncserver0 libX11_6 libXdamage1 libXext6 libXfixes3 libXinerama1 libXrandr2 libXtst6 openssl tk
 sdesc: "VNC server for real X displays"
 ldesc: "x11vnc allows one to view remotely and interact with real X 
 displays (i.e. a display corresponding to a physical monitor, keyboard, 
