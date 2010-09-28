@@ -6,30 +6,29 @@ mouse) with any VNC viewer. In this way it plays the role for Unix/X11
 that WinVNC plays for Windows.
 
 Runtime requirements:
-  cygwin-1.7.1-1
+  cygwin-1.7.7-1
   crypt-1.1-1
-  libgcc1-4.3.4-3
-  libvncserver0-0.9.7-10
-  libX11_6-1.3.3-1
-  libXdamage1-1.1.2-1
-  libXext6-1.1.1-1
-  libXfixes3-4.0.4-1
+  libopenssl098-0.9.8o-2
+  libvncserver0-0.9.7-12
+  libX11_6-1.3.5-1
+  libXdamage1-1.1.3-1
+  libXext6-1.1.2-1
+  libXfixes3-4.0.5-1
   libXinerama1-1.1-1
   libXrandr2-1.3.0-10
   libXtst6-1.1.0-1
-  openssl-0.9.8l-2
-  tk-8.5.6-1
+  tcl-tk-8.5.8-1
 
 Build requirements:
 (besides corresponding -devel packages)
   autoconf2.5-2.65-1
   automake1.9-1.9.6-10
-  binutils-2.19.51-1
-  cygport-0.9.80-1
+  binutils-2.20.51-2
+  cygport-0.10.0-1
   gawk-3.1.7-1
-  gcc4-core-4.3.4-3
+  gcc4-core-4.5.0-1
   make-3.81-2
-  sed-4.1.5-2
+  sed-4.2.1-1
 
 Canonical website:
   http://www.karlrunge.com/x11vnc/
@@ -40,19 +39,22 @@ Canonical download:
 -------------------------------------------
 
 Build instructions:
-  unpack x11vnc-0.9.9-X-src.tar.bz2
+  unpack x11vnc-0.9.12-X-src.tar.bz2
     if you use setup to install this src package, it will be
 	 unpacked under /usr/src automatically
   cd /usr/src
-  cygport ./x11vnc-0.9.9-X.cygport all
+  cygport ./x11vnc-0.9.12-X.cygport all
 
 This will create:
-  /usr/src/x11vnc-0.9.9-X-src.tar.bz2
-  /usr/src/x11vnc-0.9.9-X.tar.bz2
+  /usr/src/x11vnc-0.9.12-X-src.tar.bz2
+  /usr/src/x11vnc-0.9.12-X.tar.bz2
 
 -------------------------------------------
 
 Port Notes:
+
+----- version 0.9.12-1 -----
+Version bump.
 
 ----- version 0.9.9-1 -----
 Version bump.

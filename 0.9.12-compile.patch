@@ -1,0 +1,22 @@
+--- origsrc/x11vnc-0.9.12/x11vnc/scan.c	2010-09-09 22:46:48.000000000 -0500
++++ src/x11vnc-0.9.12/x11vnc/scan.c	2010-09-28 15:33:52.757275300 -0500
+@@ -2454,7 +2454,7 @@ int copy_screen(void) {
+ 	return 0;
+ }
+ 
+-#include <rfb/default8x16.h>
++#include "../rfb/default8x16.h"
+ 
+ /*
+  * Color values from the vcsadump program.
+--- origsrc/x11vnc-0.9.12/x11vnc/x11vnc.h	2010-09-09 22:46:48.000000000 -0500
++++ src/x11vnc-0.9.12/x11vnc/x11vnc.h	2010-09-28 15:33:04.134787600 -0500
+@@ -306,7 +306,7 @@ extern int xtrap_base_event_type;
+ #endif
+ 
+ #include <netdb.h>
+-#ifndef _AIX
++#if !defined(_AIX) && !defined(__CYGWIN__)
+ extern int h_errno;
+ #endif
+ 

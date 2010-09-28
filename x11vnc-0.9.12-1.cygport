@@ -1,7 +1,9 @@
 DESCRIPTION="VNC server for real X displays"
 HOMEPAGE="http://www.karlrunge.com/x11vnc/"
 SRC_URI="mirror://sourceforge/libvncserver/${P}.tar.gz"
-PATCH_URI="0.9.9-vpath.patch"
+
+PATCH_URI="0.9.9-vpath.patch
+           0.9.12-compile.patch"
 
 CYGCONF_ARGS="
 	--with-system-libvncserver
