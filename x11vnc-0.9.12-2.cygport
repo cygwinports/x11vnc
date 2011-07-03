@@ -7,7 +7,6 @@ PATCH_URI="0.9.9-vpath.patch
 
 CYGCONF_ARGS="
 	--with-system-libvncserver
-	--without-avahi
 	--without-fbdev
 	--without-macosx-native
 	--without-uinput

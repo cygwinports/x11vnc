@@ -1,5 +1,5 @@
 category: Net X11
-requires: crypt libopenssl098 libvncserver0 libX11_6 libXdamage1 libXext6 libXfixes3 libXinerama1 libXrandr2 libXtst6 tcl-tk
+requires: crypt libavahi-client3 libavahi-common3 libopenssl098 libvncserver0 libX11_6 libXdamage1 libXext6 libXfixes3 libXinerama1 libXrandr2 libXtst6 tcl-tk
 sdesc: "VNC server for real X displays"
 ldesc: "x11vnc allows one to view remotely and interact with real X 
 displays (i.e. a display corresponding to a physical monitor, keyboard, 
