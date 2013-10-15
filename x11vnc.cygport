@@ -1,0 +1,23 @@
+NAME="x11vnc"
+VERSION=0.9.13
+RELEASE=2
+CATEGORY="Net X11"
+SUMMARY="VNC server for real X displays"
+DESCRIPTION="x11vnc allows one to view remotely and interact with real X
+displays (i.e. a display corresponding to a physical monitor, keyboard,
+and mouse) with any VNC viewer. In this way it plays the role for UNIX/X11
+that WinVNC plays for Windows."
+REQUIRES="tcl-tk"
+HOMEPAGE="http://www.karlrunge.com/x11vnc/"
+SRC_URI="mirror://sourceforge/libvncserver/${NAME}-${VERSION}.tar.gz"
+
+PATCH_URI="0.9.9-vpath.patch
+           0.9.12-compile.patch"
+
+CYGCONF_ARGS="
+	--with-system-libvncserver
+	--without-fbdev
+	--without-macosx-native
+	--without-uinput
+	--without-v4l
+"
