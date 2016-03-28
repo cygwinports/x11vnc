@@ -1,0 +1,11 @@
+--- origsrc/x11vnc-0.9.14/src/x11vnc.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/x11vnc.c	2016-03-27 15:57:33.519963900 -0500
+@@ -1005,6 +1005,8 @@ static int limit_shm(void) {
+ 		}
+ 	} else if (!strcmp(UT.sysname, "Darwin")) {
+ 		limit = 1;
++	} else if (strstr(UT.sysname, "CYGWIN")) {
++		limit = 1;
+ 	}
+ 	if (limit && ! quiet) {
+ 		fprintf(stderr, "reducing shm usage on %s %s (adding "

@@ -1,0 +1,148 @@
+--- origsrc/x11vnc-0.9.14/misc/Xdummy.c	2016-03-27 21:37:39.198166500 -0500
++++ src/x11vnc-0.9.14/misc/Xdummy.c	2016-03-27 20:34:15.739092400 -0500
+@@ -51,10 +51,17 @@ so, delete this exception statement from
+ #include <stdlib.h>
+ #include <string.h>
+ 
++#ifdef __linux__
+ #include <linux/vt.h>
+ #include <linux/kd.h>
++#endif
++#ifdef __CYGWIN__
++#include <sys/cygwin.h>
++#define __errno_location __errno
++void *RTLD_NEXT = NULL;
++#endif
+ 
+-#define __USE_GNU
++#define _GNU_SOURCE
+ #include <dlfcn.h>
+ 
+ #include <time.h>
+@@ -115,7 +122,8 @@ void check_uid(void) {
+ 	}
+ }
+ 
+-#define CHECKIT if (debug < 0) check_debug(); \
++#define CHECKIT if(!RTLD_NEXT) RTLD_NEXT = dlopen("cygwin1.dll", 0); \
++		if (debug < 0) check_debug(); \
+ 		if (root  < 0) check_root(); \
+ 		check_uid();
+ 
+@@ -283,17 +291,18 @@ FILE *fopen(const char *pathname, const
+ #define RETURN1 if (debug) \
+ 	{fprintf(stderr, "IOCTL: covered %d 0x%x\n", fd, req);} return -1;
+ 
+-int ioctl(int fd, int req, void *ptr) {
++int ioctl(int fd, long req, void *ptr) {
+ 	static int closed_xf86Info_consoleFd = 0;
+-	static int (*real_ioctl)(int, int , void *) = NULL;
++	static int (*real_ioctl)(int, long, void *) = NULL;
+ 
+ 	CHECKIT
+ 	if (! real_ioctl) {
+-		real_ioctl = (int (*)(int, int , void *))
+-			dlsym(RTLD_NEXT, "open");
++		real_ioctl = (int (*)(int, long, void *))
++			dlsym(RTLD_NEXT, "ioctl");
+ 	}
+ 	if (debug) fprintf(stderr, "IOCTL: %d 0x%x %p\n", fd, req, ptr);
+ 
++#ifdef __linux__
+ 	/* based on xorg-x11-6.8.1-dualhead.patch */
+ 	if (req == VT_GETMODE) {
+ 		/* close(xf86Info.consoleFd) */
+@@ -326,13 +335,12 @@ int ioctl(int fd, int req, void *ptr) {
+ 			RETURN0
+ 		}
+ 	}
++#endif
+ 
+ 	return(real_ioctl(fd, req, ptr));
+ }
+ 
+ typedef void (*sighandler_t)(int);
+-#define SIGUSR1       10
+-#define SIG_DFL       ((sighandler_t)0)
+ 
+ sighandler_t signal(int signum, sighandler_t handler) {
+ 	static sighandler_t (*real_signal)(int, sighandler_t) = NULL;
+@@ -594,3 +602,33 @@ int strcmp(const char *s1, const char *s
+ 	return(real_strcmp(s1, s2));
+ }
+ #endif
++
++#ifdef __CYGWIN__
++__attribute__((constructor))
++void _init(void) {
++	cygwin_internal (CW_HOOK, "open", open);
++	cygwin_internal (CW_HOOK, "rename", rename);
++	cygwin_internal (CW_HOOK, "fopen", fopen);
++	cygwin_internal (CW_HOOK, "ioctl", ioctl);
++	cygwin_internal (CW_HOOK, "signal", signal);
++	cygwin_internal (CW_HOOK, "close", close);
++	cygwin_internal (CW_HOOK, "stat", stat);
++	cygwin_internal (CW_HOOK, "chown", chown);
++	cygwin_internal (CW_HOOK, "stat", stat);
++	cygwin_internal (CW_HOOK, "ioperm", ioperm);
++	cygwin_internal (CW_HOOK, "iopl", iopl);
++#ifdef INTERPOSE_GETUID
++	cygwin_internal (CW_HOOK, "getuid", getuid);
++	cygwin_internal (CW_HOOK, "getuid32", getuid32);
++	cygwin_internal (CW_HOOK, "getgid", getgid);
++	cygwin_internal (CW_HOOK, "getgid32", getgid32);
++	cygwin_internal (CW_HOOK, "geteuid", geteuid);
++	cygwin_internal (CW_HOOK, "geteuid32", geteuid32);
++	cygwin_internal (CW_HOOK, "getegid", getegid);
++	cygwin_internal (CW_HOOK, "getegid32", getegid32);
++#endif
++#if 0
++	cygwin_internal (CW_HOOK, "strcmp", strcmp);
++#endif
++}
++#endif
+--- origsrc/x11vnc-0.9.14/misc/Xdummy.in	2016-03-27 21:37:39.212668300 -0500
++++ src/x11vnc-0.9.14/misc/Xdummy.in	2016-03-27 21:24:53.468931200 -0500
+@@ -569,8 +569,8 @@ XDUMMY_C
+ 	if [ "X$INTERPOSE_GETUID" = "X1" ]; then
+ 		CFLAGS="$CFLAGS -DINTERPOSE_GETUID"
+ 	fi
+-	echo "$program:" cc -shared -fPIC $CFLAGS -o $SO $tmp
+-                         cc -shared -fPIC $CFLAGS -o $SO $tmp
++	echo "$program:" cc -shared -DPIC $CFLAGS -o $SO $tmp
++                         cc -shared -DPIC $CFLAGS -o $SO $tmp
+ 	rc=$?
+ 	rm -f $tmp
+ 	if [ $rc != 0 ]; then
+@@ -794,12 +794,12 @@ fi
+ if [ "X$disp" = "X" -o "X$disp" = "X:" ]; then
+ 	# try to find an open display port:
+ 	# (tcp outdated...)
+-	ports=`netstat -ant | grep LISTEN | awk '{print $4}' | sed -e 's/^.*://'`
++	ports=`netstat -ant | grep LISTEN | awk '{print $2}' | sed -e 's/^.*://'`
+ 	n=0
+ 	while [ $n -le 20 ]
+ 	do
+ 		port=`printf "60%02d" $n`
+-		if echo "$ports" | grep "^${port}\$" > /dev/null; then
++		if echo "$ports" | grep "^${port}\$" > /dev/null || test -S /tmp/.X11-unix/X$n; then
+ 			:
+ 		else
+ 			disp=":$n"
+@@ -839,11 +839,11 @@ if [ "X$vt" = "X" ]; then
+ 				n=`expr $n + 1`
+ 			done
+ 		fi
+-	fi
+-	if [ "X$vt" = "X" ]; then
+-		# take a wild guess...
+-		vt=vt16
+-		warn "$program: selected fallback VT $vt"
++		if [ "X$vt" = "X" ]; then
++			# take a wild guess...
++			vt=vt16
++			warn "$program: selected fallback VT $vt"
++		fi
+ 	fi
+ else
+ 	vt=""

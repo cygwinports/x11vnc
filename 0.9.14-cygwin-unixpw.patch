@@ -1,0 +1,62 @@
+--- origsrc/x11vnc-0.9.14/src/unixpw.c	2016-03-27 21:38:48.528470300 -0500
++++ src/x11vnc-0.9.14/src/unixpw.c	2016-03-28 00:58:20.087665300 -0500
+@@ -91,6 +91,10 @@ extern char *crypt(const char*, const ch
+ #if (defined(__MACH__) && defined(__APPLE__))
+ #define IS_BSD
+ #endif
++#ifdef __CYGWIN__
++#include <X11/Xwindows.h>
++#include <sys/cygwin.h>
++#endif
+ 
+ int white_pixel(void);
+ void unixpw_screen(int init);
+@@ -761,7 +765,11 @@ int crypt_verify(char *user, char *pass)
+ 	return 0;
+ #else
+ 	struct passwd *pwd;
++#ifdef __CYGWIN__
++	HANDLE token;
++#else
+ 	char *realpw, *cr;
++#endif
+ 	int n;
+ 
+ 	if (! scheck(user, 100, "username")) {
+@@ -779,6 +787,7 @@ int crypt_verify(char *user, char *pass)
+ 		return 0;
+ 	}
+ 
++#ifndef __CYGWIN__
+ 	realpw = pwd->pw_passwd;
+ 	if (realpw == NULL || realpw[0] == '\0') {
+ 		return 0;
+@@ -798,12 +807,20 @@ int crypt_verify(char *user, char *pass)
+ 		}
+ #endif
+ 	}
++#endif
+ 
+ 	n = strlen(pass);
+ 	if (pass[n-1] == '\n') {
+ 		pass[n-1] = '\0';
+ 	}
+ 
++#ifdef __CYGWIN__
++	token = cygwin_logon_user (pwd, pass);
++	if (token == INVALID_HANDLE_VALUE)
++		return 0;
++	cygwin_set_impersonation_token (token);
++	return 1;
++#else	/* !__CYGWIN__ */
+ 	/* XXX remove need for cast */
+ 	cr = (char *) crypt(pass, realpw);
+ 	if (db > 1) {
+@@ -818,6 +835,7 @@ int crypt_verify(char *user, char *pass)
+ 	} else {
+ 		return 0;
+ 	}
++#endif	/* !__CYGWIN__ */
+ #endif	/* UNIXPW_CRYPT */
+ }
+ 

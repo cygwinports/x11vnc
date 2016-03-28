@@ -1,0 +1,763 @@
+Some of this is already upstream in commits a6852d6 and e70123d.
+
+--- origsrc/x11vnc-0.9.14/src/appshare.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/appshare.c	2016-03-27 15:44:39.604732700 -0500
+@@ -553,7 +553,7 @@ static void kill_helper_pid(void) {
+ 	usleep(50 * 1000);
+ 	kill(helper_pid, SIGKILL);
+ 	usleep(25 * 1000);
+-#if LIBVNCSERVER_HAVE_SYS_WAIT_H && HAVE_WAITPID 
++#if HAVE_SYS_WAIT_H && HAVE_WAITPID 
+ 	waitpid(helper_pid, &status, WNOHANG); 
+ #endif
+ }
+--- origsrc/x11vnc-0.9.14/src/avahi.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/avahi.c	2016-03-27 15:43:50.774665300 -0500
+@@ -52,7 +52,7 @@ static void kill_avahi_pid(void) {
+ }
+ 
+ static int try_avahi_helper(char *name, char *host, uint16_t port) {
+-#if LIBVNCSERVER_HAVE_FORK
++#if HAVE_FORK
+ 	char *cmd, *p, *path = getenv("PATH"), portstr[32];
+ 	int i;
+ 
+@@ -142,7 +142,7 @@ static int try_avahi_helper(char *name,
+ #endif
+ }
+ 
+-#if !defined(LIBVNCSERVER_HAVE_AVAHI) || !defined(LIBVNCSERVER_HAVE_LIBPTHREAD)
++#if !defined(HAVE_AVAHI) || !defined(LIBVNCSERVER_HAVE_LIBPTHREAD)
+ void avahi_initialise(void) {
+ 	rfbLog("avahi_initialise: no Avahi support at buildtime.\n");
+ }
+--- origsrc/x11vnc-0.9.14/src/connections.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/connections.c	2016-03-27 15:44:58.124758300 -0500
+@@ -693,7 +693,7 @@ int run_user_command(char *cmd, rfbClien
+ 		goto got_rc;
+ 	}
+ 
+-#if LIBVNCSERVER_HAVE_FORK
++#if HAVE_FORK
+ 	{
+ 		pid_t pid, pidw;
+ 		struct sigaction sa, intr, quit;
+@@ -856,7 +856,7 @@ void client_gone(rfbClientPtr client) {
+ 			    cd->ssl_helper_pid);
+ 			kill(cd->ssl_helper_pid, SIGTERM);
+ 			usleep(200*1000);
+-#if LIBVNCSERVER_HAVE_SYS_WAIT_H && HAVE_WAITPID 
++#if HAVE_SYS_WAIT_H && HAVE_WAITPID 
+ 			waitpid(cd->ssl_helper_pid, &status, WNOHANG); 
+ #endif
+ 			ssl_helper_pid(cd->ssl_helper_pid, -1);	/* delete */
+--- origsrc/x11vnc-0.9.14/src/gui.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/gui.c	2016-03-27 15:45:56.206838500 -0500
+@@ -866,7 +866,7 @@ void do_gui(char *opts, int sleep) {
+ 
+ 	if (start_x11vnc) {
+ 
+-#if LIBVNCSERVER_HAVE_FORK
++#if HAVE_FORK
+ 		/* fork into the background now */
+ 		int p;
+ 		pid_t parent = getpid();
+--- origsrc/x11vnc-0.9.14/src/inet.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/inet.c	2016-03-27 15:47:16.556949400 -0500
+@@ -87,7 +87,7 @@ char *host2ip(char *host) {
+ 
+ char *raw2host(char *raw, int len) {
+ 	char *str;
+-#if LIBVNCSERVER_HAVE_NETDB_H && LIBVNCSERVER_HAVE_NETINET_IN_H
++#if HAVE_NETDB_H && HAVE_NETINET_IN_H
+ 	struct hostent *hp;
+ 
+ 	if (! host_lookup) {
+@@ -111,7 +111,7 @@ char *raw2ip(char *raw) {
+ 
+ char *ip2host(char *ip) {
+ 	char *str;
+-#if LIBVNCSERVER_HAVE_NETDB_H && LIBVNCSERVER_HAVE_NETINET_IN_H
++#if HAVE_NETDB_H && HAVE_NETINET_IN_H
+ 	struct hostent *hp;
+ 	in_addr_t iaddr;
+ 
+@@ -240,7 +240,7 @@ static char *get_host(int sock, int remo
+ 	saddr_len = sizeof(saddr);
+ 	memset(&saddr, 0, sizeof(saddr));
+ 	saddr_port = -1;
+-#if LIBVNCSERVER_HAVE_NETINET_IN_H
++#if HAVE_NETINET_IN_H
+ 	if (remote) {
+ 		if (!getpeername(sock, (struct sockaddr *)&saddr, &saddr_len)) {
+ 			saddr_ip_str = inet_ntoa(saddr.sin_addr);
+@@ -282,7 +282,7 @@ char *ident_username(rfbClientPtr client
+ 		 * need to check to see if the operation will block for
+ 		 * a long time: a firewall may just ignore our packets.
+ 		 */
+-#if LIBVNCSERVER_HAVE_FORK
++#if HAVE_FORK
+ 	    {	pid_t pid, pidw;
+ 		int rc;
+ 		if ((pid = fork()) > 0) {
+@@ -654,12 +654,12 @@ int listen6(int port) {
+ #endif
+ }
+ 
+-#ifdef LIBVNCSERVER_HAVE_SYS_SOCKET_H
++#ifdef HAVE_SYS_SOCKET_H
+ #include <sys/un.h>
+ #endif
+ 
+ int listen_unix(char *file) {
+-#if !defined(AF_UNIX) || !defined(LIBVNCSERVER_HAVE_SYS_SOCKET_H)
++#if !defined(AF_UNIX) || !defined(HAVE_SYS_SOCKET_H)
+ 	if (sock) {}
+ 	return -1;
+ #else
+@@ -694,7 +694,7 @@ int listen_unix(char *file) {
+ }
+ 
+ int accept_unix(int s) {
+-#if !defined(AF_UNIX) || !defined(LIBVNCSERVER_HAVE_SYS_SOCKET_H)
++#if !defined(AF_UNIX) || !defined(HAVE_SYS_SOCKET_H)
+ 	if (s) {}
+ 	return -1;
+ #else
+--- origsrc/x11vnc-0.9.14/src/linuxfb.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/linuxfb.c	2016-03-27 15:47:58.547007400 -0500
+@@ -43,10 +43,10 @@ so, delete this exception statement from
+ #include "keyboard.h"
+ #include "macosx.h"
+ 
+-#if LIBVNCSERVER_HAVE_SYS_IOCTL_H
++#if HAVE_SYS_IOCTL_H
+ #include <sys/ioctl.h>
+ #endif
+-#if LIBVNCSERVER_HAVE_LINUX_FB_H
++#if HAVE_LINUX_FB_H
+ #include <linux/fb.h>
+ #endif
+ 
+@@ -178,8 +178,8 @@ char *console_guess(char *str, int *fd)
+ 	rfbLog("console_guess: file is %s\n", file);
+ 
+ 	if (! atparms) {
+-#if LIBVNCSERVER_HAVE_LINUX_FB_H
+-#if LIBVNCSERVER_HAVE_SYS_IOCTL_H
++#if HAVE_LINUX_FB_H
++#if HAVE_SYS_IOCTL_H
+ 		struct fb_var_screeninfo var_info;
+ 		int d = open(file, O_RDWR);
+ 		if (d >= 0) {
+@@ -356,7 +356,7 @@ void console_key_command(rfbBool down, r
+ 			keysym -= 0xFF80;
+ 		}
+ 	}
+-#if LIBVNCSERVER_HAVE_SYS_IOCTL_H && defined(TIOCSTI)
++#if HAVE_SYS_IOCTL_H && defined(TIOCSTI)
+ 	if (keysym < 0x100) {
+ 		if (ioctl(pipeinput_cons_fd, TIOCSTI, &keysym) != -1) {
+ 			return;
+--- origsrc/x11vnc-0.9.14/src/macosx.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/macosx.c	2016-03-27 15:37:40.084153800 -0500
+@@ -33,7 +33,7 @@ so, delete this exception statement from
+ /* -- macosx.c -- */
+ 
+ #include "config.h"
+-#if (defined(__MACH__) && defined(__APPLE__) && defined(LIBVNCSERVER_HAVE_MACOSX_NATIVE_DISPLAY))
++#if (defined(__MACH__) && defined(__APPLE__) && defined(HAVE_MACOSX_NATIVE_DISPLAY))
+ 
+ #define DOMAC 1
+ 
+@@ -748,5 +748,5 @@ int macosx_check_clipped(int win, int *l
+ }
+ 
+ 
+-#endif 	/* LIBVNCSERVER_HAVE_MACOSX_NATIVE_DISPLAY */
++#endif 	/* HAVE_MACOSX_NATIVE_DISPLAY */
+ 
+--- origsrc/x11vnc-0.9.14/src/macosx_opengl.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/macosx_opengl.c	2016-03-27 15:37:40.094153800 -0500
+@@ -38,7 +38,7 @@ so, delete this exception statement from
+ #include <ApplicationServices/ApplicationServices.h>
+ 
+ #include <rfb/rfb.h>
+-#if LIBVNCSERVER_HAVE_MACOSX_OPENGL_H
++#if HAVE_MACOSX_OPENGL_H
+ #include <OpenGL/OpenGL.h>
+ #include <OpenGL/gl.h>
+ #endif
+--- origsrc/x11vnc-0.9.14/src/screen.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/screen.c	2016-03-27 15:48:16.027031500 -0500
+@@ -1704,7 +1704,7 @@ if (db) fprintf(stderr, "initialize_raw_
+ 	if (raw_fb_addr || raw_fb_seek) {
+ 		if (raw_fb_shm) {
+ 			shmdt(raw_fb_addr);
+-#if LIBVNCSERVER_HAVE_MMAP
++#if HAVE_MMAP
+ 		} else if (raw_fb_mmap) {
+ 			munmap(raw_fb_addr, raw_fb_mmap);
+ 			if (raw_fb_fd >= 0) {
+@@ -2119,7 +2119,7 @@ if (db) fprintf(stderr, "initialize_raw_
+ 
+ 	if (sscanf(str, "shm:%d", &shmid) == 1) {
+ 		/* shm:N */
+-#if HAVE_XSHM || LIBVNCSERVER_HAVE_SHMAT
++#if HAVE_XSHM || HAVE_SHMAT
+ 		raw_fb_addr = (char *) shmat(shmid, 0, SHM_RDONLY);
+ 		if (! raw_fb_addr) {
+ 			rfbLogEnable(1);
+@@ -2206,7 +2206,7 @@ if (db) fprintf(stderr, "initialize_raw_
+ 			last_mode = 0;
+ 
+ 		} else if (do_mmap) {
+-#if LIBVNCSERVER_HAVE_MMAP
++#if HAVE_MMAP
+ 			raw_fb_addr = mmap(0, size, PROT_READ, MAP_SHARED,
+ 			    fd, 0);
+ 
+--- origsrc/x11vnc-0.9.14/src/solid.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/solid.c	2016-03-27 15:48:30.497051400 -0500
+@@ -1181,7 +1181,7 @@ static void solid_macosx(int restore) {
+ 			rfbLog("kill -TERM macosx_solid_background helper pid: %d\n", (int) solid_macosx_pid);
+ 			kill(solid_macosx_pid, SIGTERM);
+ #if 0
+-#if LIBVNCSERVER_HAVE_SYS_WAIT_H
++#if HAVE_SYS_WAIT_H
+ #if HAVE_WAITPID
+ 			for (i=0; i < 7; i++) {
+ 				usleep(1000 * 1000);
+@@ -1200,7 +1200,7 @@ static void solid_macosx(int restore) {
+ 	if (no_external_cmds || !cmd_ok("dt")) {
+ 		return;
+ 	}
+-#if LIBVNCSERVER_HAVE_FORK
++#if HAVE_FORK
+ 	pid = fork();
+ 
+ 	if (pid == -1) {
+--- origsrc/x11vnc-0.9.14/src/sslcmds.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/sslcmds.c	2016-03-27 15:48:54.077084000 -0500
+@@ -39,8 +39,8 @@ so, delete this exception statement from
+ #include "ssltools.h"
+ #include "connections.h"
+ 
+-#if LIBVNCSERVER_HAVE_FORK
+-#if LIBVNCSERVER_HAVE_SYS_WAIT_H
++#if HAVE_FORK
++#if HAVE_SYS_WAIT_H
+ #if HAVE_WAITPID
+ #define SSLCMDS
+ #endif
+--- origsrc/x11vnc-0.9.14/src/sslhelper.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/sslhelper.c	2016-03-27 15:50:09.267187800 -0500
+@@ -51,8 +51,8 @@ so, delete this exception statement from
+ 
+ #define DO_DH 0
+ 
+-#if LIBVNCSERVER_HAVE_FORK
+-#if LIBVNCSERVER_HAVE_SYS_WAIT_H && HAVE_WAITPID
++#if HAVE_FORK
++#if HAVE_SYS_WAIT_H && HAVE_WAITPID
+ #define FORK_OK
+ #endif
+ #endif
+@@ -2135,11 +2135,11 @@ static int ssl_init(int s_in, int s_out,
+ 			}
+ 		} else {
+ 			rfbLog("SSL: ssl_helper[%d]: accepted client %s x509 cert is:\n", getpid(), name);
+-#if LIBVNCSERVER_HAVE_X509_PRINT_EX_FP
++#if HAVE_X509_PRINT_EX_FP
+ 			X509_print_ex_fp(stderr, x, 0, XN_FLAG_MULTILINE);
+ #endif
+ 			if (cr != NULL) {
+-#if LIBVNCSERVER_HAVE_X509_PRINT_EX_FP
++#if HAVE_X509_PRINT_EX_FP
+ 				X509_print_ex_fp(cr, x, 0, XN_FLAG_MULTILINE);
+ #else
+ 				rfbLog("** not compiled with libssl X509_print_ex_fp() function **\n");
+@@ -2964,7 +2964,7 @@ void ssl_helper_pid(pid_t pid, int sock)
+ 					}
+ 				}
+ 
+-#if LIBVNCSERVER_HAVE_SYS_WAIT_H && LIBVNCSERVER_HAVE_WAITPID 
++#if HAVE_SYS_WAIT_H && HAVE_WAITPID
+ 				wret = waitpid(helpers[i], &status, WNOHANG); 
+ 
+ if (db) fprintf(stderr, "waitpid(%d)\n", helpers[i]);
+@@ -3000,7 +3000,7 @@ if (db) fprintf(stderr, "ssl_helper_pid(
+ 	for (i=0; i < HPSIZE; i++) {
+ 		if (helpers[i] == pid) {
+ 			if (sock == -1) {
+-#if LIBVNCSERVER_HAVE_SYS_WAIT_H && LIBVNCSERVER_HAVE_WAITPID 
++#if HAVE_SYS_WAIT_H && HAVE_WAITPID
+ 				pid_t wret;
+ 				wret = waitpid(helpers[i], &status, WNOHANG); 
+ 
+--- origsrc/x11vnc-0.9.14/src/uinput.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/uinput.c	2016-03-27 15:50:19.767202200 -0500
+@@ -41,9 +41,9 @@ so, delete this exception statement from
+ #include "keyboard.h"
+ #include "allowed_input_t.h"
+ 
+-#if LIBVNCSERVER_HAVE_SYS_IOCTL_H
+-#if LIBVNCSERVER_HAVE_LINUX_INPUT_H
+-#if LIBVNCSERVER_HAVE_LINUX_UINPUT_H
++#if HAVE_SYS_IOCTL_H
++#if HAVE_LINUX_INPUT_H
++#if HAVE_LINUX_UINPUT_H
+ #define UINPUT_OK
+ #endif
+ #endif
+--- origsrc/x11vnc-0.9.14/src/unixpw.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/unixpw.c	2016-03-27 15:51:15.427279100 -0500
+@@ -55,33 +55,33 @@ extern char *crypt(const char*, const ch
+ #include "rates.h"
+ #include "default8x16.h"
+ 
+-#if LIBVNCSERVER_HAVE_FORK
+-#if LIBVNCSERVER_HAVE_SYS_WAIT_H && LIBVNCSERVER_HAVE_WAITPID
++#if HAVE_FORK
++#if HAVE_SYS_WAIT_H && HAVE_WAITPID
+ #define UNIXPW_SU
+ #endif
+ #endif
+ 
+ #ifdef IGNORE_GETSPNAM
+-#undef LIBVNCSERVER_HAVE_GETSPNAM
+-#define LIBVNCSERVER_HAVE_GETSPNAM 0
++#undef HAVE_GETSPNAM
++#define HAVE_GETSPNAM 0
+ #endif
+ 
+-#if LIBVNCSERVER_HAVE_PWD_H && LIBVNCSERVER_HAVE_GETPWNAM
+-#if LIBVNCSERVER_HAVE_CRYPT || LIBVNCSERVER_HAVE_LIBCRYPT || HAVE_LIBCRYPT
++#if HAVE_PWD_H && HAVE_GETPWNAM
++#if HAVE_CRYPT || LIBVNCSERVER_HAVE_LIBCRYPT || HAVE_LIBCRYPT
+ #define UNIXPW_CRYPT
+-#if LIBVNCSERVER_HAVE_GETSPNAM
++#if HAVE_GETSPNAM
+ #include <shadow.h>
+ #endif
+ #endif
+ #endif
+ 
+-#if LIBVNCSERVER_HAVE_SYS_IOCTL_H
++#if HAVE_SYS_IOCTL_H
+ #include <sys/ioctl.h>
+ #endif
+-#if LIBVNCSERVER_HAVE_TERMIOS_H
++#if HAVE_TERMIOS_H
+ #include <termios.h>
+ #endif
+-#if LIBVNCSERVER_HAVE_SYS_STROPTS_H
++#if HAVE_SYS_STROPTS_H
+ #include <sys/stropts.h>
+ #endif
+ 
+@@ -520,7 +520,7 @@ char *get_pty_ptmx(int *fd_p) {
+ 
+ 	*fd_p = -1;
+ 
+-#if LIBVNCSERVER_HAVE_GRANTPT
++#if HAVE_GRANTPT
+ 
+ 	for (i=0; i < ndevs; i++) {
+ #ifdef O_NOCTTY
+@@ -538,7 +538,7 @@ char *get_pty_ptmx(int *fd_p) {
+ 		return NULL;
+ 	}
+ 
+-#if LIBVNCSERVER_HAVE_SYS_IOCTL_H && defined(TIOCPKT)
++#if HAVE_SYS_IOCTL_H && defined(TIOCPKT)
+ 	tmp = 0;
+ 	ioctl(fd, TIOCPKT, (char *) &tmp);
+ #endif
+@@ -561,7 +561,7 @@ char *get_pty_ptmx(int *fd_p) {
+ 		return NULL;
+ 	}
+ 
+-#if LIBVNCSERVER_HAVE_SYS_IOCTL_H && defined(TIOCFLUSH)
++#if HAVE_SYS_IOCTL_H && defined(TIOCFLUSH)
+ 	ioctl(fd, TIOCFLUSH, (char *) 0);
+ #endif
+ 
+@@ -611,7 +611,7 @@ char *get_pty_loop(int *fd_p) {
+ 		return NULL;
+ 	}
+ 
+-#if LIBVNCSERVER_HAVE_SYS_IOCTL_H && defined(TIOCFLUSH)
++#if HAVE_SYS_IOCTL_H && defined(TIOCFLUSH)
+ 	ioctl(fd, TIOCFLUSH, (char *) 0);
+ #endif
+ 
+@@ -628,7 +628,7 @@ char *get_pty(int *fd_p) {
+ #ifdef IS_BSD
+ 	return get_pty_loop(fd_p);
+ #else
+-#if LIBVNCSERVER_HAVE_GRANTPT
++#if HAVE_GRANTPT
+ 	used_get_pty_ptmx = 1;
+ 	return get_pty_ptmx(fd_p);
+ #else
+@@ -639,21 +639,21 @@ char *get_pty(int *fd_p) {
+ 
+ void try_to_be_nobody(void) {
+ 
+-#if LIBVNCSERVER_HAVE_PWD_H
++#if HAVE_PWD_H
+ 	struct passwd *pw;
+ 	pw = getpwnam("nobody");
+ 
+ 	if (pw) {
+-#if LIBVNCSERVER_HAVE_SETUID
++#if HAVE_SETUID
+ 		setuid(pw->pw_uid);
+ #endif
+-#if LIBVNCSERVER_HAVE_SETEUID
++#if HAVE_SETEUID
+ 		seteuid(pw->pw_uid);
+ #endif
+-#if LIBVNCSERVER_HAVE_SETGID
++#if HAVE_SETGID
+ 		setgid(pw->pw_gid);
+ #endif
+-#if LIBVNCSERVER_HAVE_SETEGID
++#if HAVE_SETEGID
+ 		setegid(pw->pw_gid);
+ #endif
+ 	}
+@@ -788,7 +788,7 @@ int crypt_verify(char *user, char *pass)
+ 
+ 	if (strlen(realpw) < 12) {
+ 		/* e.g. "x", try getspnam(), sometimes root for inetd, etc */
+-#if LIBVNCSERVER_HAVE_GETSPNAM
++#if HAVE_GETSPNAM
+ 		struct spwd *sp = getspnam(user);
+ 		if (sp != NULL && sp->sp_pwdp != NULL) {
+ 			if (db) fprintf(stderr, "using getspnam()\n");
+@@ -1065,7 +1065,7 @@ int su_verify(char *user, char *pass, ch
+ 			perror("setpgrp");
+ 			exit(1);
+ 		}
+-#if LIBVNCSERVER_HAVE_SYS_IOCTL_H && defined(TIOCNOTTY)
++#if HAVE_SYS_IOCTL_H && defined(TIOCNOTTY)
+ 		ttyfd = open("/dev/tty", O_RDWR);
+ 		if (ttyfd >= 0) {
+ 			(void) ioctl(ttyfd, TIOCNOTTY, (char *) 0);
+@@ -1086,8 +1086,8 @@ int su_verify(char *user, char *pass, ch
+ 
+ /* streams options fixups, handle cases as they are found: */
+ #if defined(__hpux)
+-#if LIBVNCSERVER_HAVE_SYS_STROPTS_H
+-#if LIBVNCSERVER_HAVE_SYS_IOCTL_H && defined(I_PUSH)
++#if HAVE_SYS_STROPTS_H
++#if HAVE_SYS_IOCTL_H && defined(I_PUSH)
+ 		if (used_get_pty_ptmx) {
+ 			ioctl(sfd, I_PUSH, "ptem");
+ 			ioctl(sfd, I_PUSH, "ldterm");
+@@ -1105,7 +1105,7 @@ int su_verify(char *user, char *pass, ch
+ 			exit(1);
+ 		}
+ 
+-#if LIBVNCSERVER_HAVE_SYS_IOCTL_H && defined(TIOCSCTTY)
++#if HAVE_SYS_IOCTL_H && defined(TIOCSCTTY)
+ 		ioctl(sfd, TIOCSCTTY, (char *) 0);
+ #endif
+ 
+@@ -1127,7 +1127,7 @@ int su_verify(char *user, char *pass, ch
+ 		chdir("/");
+ 
+ 		try_to_be_nobody();
+-#if LIBVNCSERVER_HAVE_GETUID
++#if HAVE_GETUID
+ 		if (getuid() == 0 || geteuid() == 0) {
+ 			exit(1);
+ 		}
+@@ -1204,7 +1204,7 @@ int su_verify(char *user, char *pass, ch
+ 		return 0;
+ 	}
+ 
+-#if LIBVNCSERVER_HAVE_SYS_IOCTL_H && defined(TIOCTRAP)
++#if HAVE_SYS_IOCTL_H && defined(TIOCTRAP)
+ 	{
+ 		int control = 1;
+ 		ioctl(fd, TIOCTRAP, &control);
+@@ -1523,7 +1523,7 @@ void check_unixpw_userprefs(void) {
+ 	if (keep_unixpw_user == NULL || keep_unixpw_opts == NULL) {
+ 		return;
+ 	}
+-#if LIBVNCSERVER_HAVE_PWD_H
++#if HAVE_PWD_H
+ 	if (prefs != NULL && !strchr(prefs, '/')) {
+ 		struct passwd *pw = getpwnam(keep_unixpw_user);
+ 		if (pw != NULL) {
+--- origsrc/x11vnc-0.9.14/src/user.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/user.c	2016-03-27 15:51:36.777308500 -0500
+@@ -140,7 +140,7 @@ void check_switched_user(void) {
+ /* utilities for switching users */
+ static char *get_login_list(int with_display) {
+ 	char *out;
+-#if LIBVNCSERVER_HAVE_UTMPX_H
++#if HAVE_UTMPX_H
+ 	int i, cnt, max = 200, ut_namesize = 32;
+ 	int dpymax = 1000, sawdpy[1000];
+ 	struct utmpx *utx;
+@@ -339,7 +339,7 @@ static void user2uid(char *user, uid_t *
+ 		*uid = (uid_t) u;
+ 	}
+ 
+-#if LIBVNCSERVER_HAVE_PWD_H
++#if HAVE_PWD_H
+ 	if (1) {
+ 		struct passwd *pw;
+ 		if (numerical) {
+@@ -650,7 +650,7 @@ static int guess_user_and_switch(char *s
+ 
+ static int try_user_and_display(uid_t uid, gid_t gid, char *dpystr) {
+ 	/* NO strtoks */
+-#if LIBVNCSERVER_HAVE_FORK && LIBVNCSERVER_HAVE_SYS_WAIT_H && LIBVNCSERVER_HAVE_PWD_H
++#if HAVE_FORK && HAVE_SYS_WAIT_H && HAVE_PWD_H
+ 	pid_t pid, pidw;
+ 	char *home, *name;
+ 	int st;
+@@ -707,7 +707,7 @@ static int try_user_and_display(uid_t ui
+ 	if (pidw == pid && WIFEXITED(st) && WEXITSTATUS(st) == 0) {
+ 		return 1;
+ 	}
+-#endif	/* LIBVNCSERVER_HAVE_FORK ... */
++#endif	/* HAVE_FORK ... */
+ 	return 0;
+ }
+ 
+@@ -761,7 +761,7 @@ static int switch_user_env(uid_t uid, gi
+ 	int reset_fb = 0;
+ 	int grp_ok = 0;
+ 
+-#if !LIBVNCSERVER_HAVE_SETUID
++#if !HAVE_SETUID
+ 	return 0;
+ #else
+ 	/*
+@@ -773,8 +773,8 @@ static int switch_user_env(uid_t uid, gi
+ 		clean_shm(0);
+ 		free_tiles();
+ 	}
+-#if LIBVNCSERVER_HAVE_INITGROUPS
+-#if LIBVNCSERVER_HAVE_PWD_H
++#if HAVE_INITGROUPS
++#if HAVE_PWD_H
+ 	if (getpwuid(uid) != NULL && getenv("X11VNC_SINGLE_GROUP") == NULL) {
+ 		struct passwd *p = getpwuid(uid);
+ 		/* another possibility is p->pw_gid instead of gid */
+@@ -1210,7 +1210,7 @@ static void handle_one_http_request(void
+ 		return;
+ 	} else {
+ 		/* inetd case: */
+-#if LIBVNCSERVER_HAVE_FORK
++#if HAVE_FORK
+ 		pid_t pid;
+ 		int s_in = screen->inetdSock;
+ 		if (s_in < 0) {
+@@ -1482,7 +1482,7 @@ static void setup_service(void) {
+ 
+ static void check_waitbg(void) {
+ 	if (getenv("WAITBG")) {
+-#if LIBVNCSERVER_HAVE_FORK && HAVE_SETSID
++#if HAVE_FORK && HAVE_SETSID
+ 		int p, n;
+ 		if ((p = fork()) > 0)  {
+ 			exit(0);
+@@ -1706,7 +1706,7 @@ static void vnc_redirect_loop(char *vnc_
+ 		pid_t pid = 0;
+ 		/* XXX ipv6 */
+ 		if (screen->httpListenSock >= 0) {
+-#if LIBVNCSERVER_HAVE_FORK
++#if HAVE_FORK
+ 			if ((pid = fork()) > 0) {
+ 				close(screen->httpListenSock);
+ 				/* mutex */
+@@ -1762,7 +1762,7 @@ static void vnc_redirect_loop(char *vnc_
+ 			alarm(0);
+ 		}
+ 		if (pid > 0) {
+-#if LIBVNCSERVER_HAVE_FORK
++#if HAVE_FORK
+ 			int rc;
+ 			pid_t pidw;
+ 			rfbLog("wait_for_client: kill TERM: %d\n", (int) pid);
+--- origsrc/x11vnc-0.9.14/src/util.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/util.c	2016-03-27 15:51:59.757340200 -0500
+@@ -273,7 +273,7 @@ char *get_user_name(void) {
+ 		user = getenv("LOGNAME");
+ 	}
+ 
+-#if LIBVNCSERVER_HAVE_PWD_H
++#if HAVE_PWD_H
+ 	if (user == NULL) {
+ 		struct passwd *pw = getpwuid(getuid());
+ 		if (pw) {
+@@ -294,7 +294,7 @@ char *get_home_dir(void) {
+ 
+ 	home = getenv("HOME");
+ 
+-#if LIBVNCSERVER_HAVE_PWD_H
++#if HAVE_PWD_H
+ 	if (home == NULL) {
+ 		struct passwd *pw = getpwuid(getuid());
+ 		if (pw) {
+@@ -315,7 +315,7 @@ char *get_shell(void) {
+ 
+ 	shell = getenv("SHELL");
+ 
+-#if LIBVNCSERVER_HAVE_PWD_H
++#if HAVE_PWD_H
+ 	if (shell == NULL) {
+ 		struct passwd *pw = getpwuid(getuid());
+ 		if (pw) {
+@@ -336,7 +336,7 @@ char *get_shell(void) {
+  */
+ char *this_host(void) {
+ 	char host[MAXN];
+-#if LIBVNCSERVER_HAVE_GETHOSTNAME
++#if HAVE_GETHOSTNAME
+ 	if (gethostname(host, MAXN) == 0) {
+ 		host[MAXN-1] = '\0';
+ 		return strdup(host);
+--- origsrc/x11vnc-0.9.14/src/v4l.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/v4l.c	2016-03-27 15:52:20.357368700 -0500
+@@ -41,8 +41,8 @@ so, delete this exception statement from
+ #include "keyboard.h"
+ #include "allowed_input_t.h"
+ 
+-#if LIBVNCSERVER_HAVE_LINUX_VIDEODEV_H
+-#if LIBVNCSERVER_HAVE_SYS_IOCTL_H
++#if HAVE_LINUX_VIDEODEV_H
++#if HAVE_SYS_IOCTL_H
+ #include <sys/ioctl.h>
+ #define CONFIG_VIDEO_V4L1_COMPAT
+ #include <linux/videodev.h>
+--- origsrc/x11vnc-0.9.14/src/x11vnc.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/x11vnc.c	2016-03-27 15:57:33.519963900 -0500
+@@ -698,7 +698,7 @@ void do_tsd(void) {
+ 	    logfile ? logfile : "/dev/null" ); 
+ 	rfbLog("running: %s\n", cmd);
+ 
+-#if LIBVNCSERVER_HAVE_FORK && HAVE_SETSID
++#if HAVE_FORK && HAVE_SETSID
+ 	/* fork into the background now */
+ 	if ((pid = fork()) > 0)  {
+ 		pid_t pidw;
+@@ -1675,7 +1675,7 @@ static void check_loop_mode(int argc, ch
+ 		}
+ 	}
+ 	if (loop_mode && getenv("X11VNC_LOOP_MODE") == NULL) {
+-#if LIBVNCSERVER_HAVE_FORK
++#if HAVE_FORK
+ 		char **argv2;
+ 		int k, i = 1;
+ 
+@@ -4508,8 +4508,8 @@ int main(int argc, char* argv[]) {
+ 			passwdfile = strdup(f);
+ 		}
+ 
+-#if LIBVNCSERVER_HAVE_FORK
+-#if LIBVNCSERVER_HAVE_SYS_WAIT_H
++#if HAVE_FORK
++#if HAVE_SYS_WAIT_H
+ #if HAVE_WAITPID
+ 		if (! found) {
+ 			pid_t pid = fork();
+@@ -5951,7 +5951,7 @@ int main(int argc, char* argv[]) {
+ 		clean_up_exit(0);
+ 	}
+ 
+-#if LIBVNCSERVER_HAVE_FORK && HAVE_SETSID
++#if HAVE_FORK && HAVE_SETSID
+ 	if (bg) {
+ 		int p, n;
+ 		if (getenv("X11VNC_LOOP_MODE_BG")) {
+--- origsrc/x11vnc-0.9.14/src/x11vnc.h	2016-03-27 13:04:40.641621600 -0500
++++ src/x11vnc-0.9.14/src/x11vnc.h	2016-03-27 15:52:52.917413600 -0500
+@@ -255,11 +255,11 @@ so, delete this exception statement from
+ #endif
+ 
+ #if (SMALL_FOOTPRINT > 2)
+-#undef LIBVNCSERVER_HAVE_UTMPX_H
+-#undef LIBVNCSERVER_HAVE_PWD_H
++#undef HAVE_UTMPX_H
++#undef HAVE_PWD_H
+ #undef REMOTE_CONTROL
+-#define LIBVNCSERVER_HAVE_UTMPX_H 0
+-#define LIBVNCSERVER_HAVE_PWD_H 0
++#define HAVE_UTMPX_H 0
++#define HAVE_PWD_H 0
+ #define REMOTE_CONTROL 0
+ #endif
+ 
+@@ -308,7 +308,7 @@ so, delete this exception statement from
+ #include <sys/shm.h>
+ #include <X11/extensions/XShm.h>
+ #endif
+-#if LIBVNCSERVER_HAVE_SHMAT
++#if HAVE_SHMAT
+ #include <sys/ipc.h>
+ #include <sys/shm.h>
+ #endif
+@@ -342,7 +342,7 @@ extern int xtrap_base_event_type;
+ #include <X11/extensions/Xinerama.h>
+ #endif
+ 
+-#if LIBVNCSERVER_HAVE_SYS_SOCKET_H
++#if HAVE_SYS_SOCKET_H
+ #include <sys/socket.h>
+ #endif
+ 
+@@ -350,7 +350,7 @@ extern int xtrap_base_event_type;
+ extern int h_errno;
+ #endif
+ 
+-#if LIBVNCSERVER_HAVE_NETINET_IN_H
++#if HAVE_NETINET_IN_H
+ #include <netinet/in.h>
+ #include <netinet/tcp.h>
+ #include <arpa/inet.h>
+@@ -389,14 +389,14 @@ extern int h_errno;
+ #include <pwd.h>
+ #include <grp.h>
+ #endif
+-#if LIBVNCSERVER_HAVE_SYS_WAIT_H
++#if HAVE_SYS_WAIT_H
+ #include <sys/wait.h>
+ #endif
+-#if LIBVNCSERVER_HAVE_UTMPX_H
++#if HAVE_UTMPX_H
+ #include <utmpx.h>
+ #endif
+ 
+-#if LIBVNCSERVER_HAVE_MMAP
++#if HAVE_MMAP
+ #include <sys/mman.h>
+ #endif
+ 
+--- origsrc/x11vnc-0.9.14/src/xevents.c	2015-11-14 11:49:21.000000000 -0600
++++ src/x11vnc-0.9.14/src/xevents.c	2016-03-27 15:53:02.667427000 -0500
+@@ -835,7 +835,7 @@ static void grab_buster_watch(int parent
+ }
+ 
+ void spawn_grab_buster(void) {
+-#if LIBVNCSERVER_HAVE_FORK
++#if HAVE_FORK
+ 	pid_t pid;
+ 	int parent = (int) getpid();
+ 	char *dstr = strdup(DisplayString(dpy));
+@@ -1999,7 +1999,7 @@ static void try_local_chat_window(void)
+ 
+ 	sprintf(cmd, "ssvnc -cmd VNC://localhost:%d -chatonly", port);
+ 
+-#if LIBVNCSERVER_HAVE_FORK
++#if HAVE_FORK
+ 	pid = fork();
+ #endif
+ 
